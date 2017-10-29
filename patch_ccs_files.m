@@ -33,6 +33,11 @@ function patch_ccs_files(ccs_install_root)
     % https://e2e.ti.com/support/development_tools/code_composer_studio/f/81/t/614498
     patch_ccs_file (context, 'AET_PropertyCP_Tracer_kepler.xml', ...
         'ccs_base/emulation/analysis/xmldb/aet_config');
+    
+    % Expose a Target Configuration "Interface Type" option for MSP430
+    % devices to allow the interface type to be specifed, rather than being
+    % detected automatically.
+    patch_ccs_file (context, 'msp430_emu.xml', 'ccs_base/common/targetdb/drivers');
 end
 
 % Attempt to patch one file in a CCS installation, by replacing the
@@ -41,8 +46,12 @@ end
 function patch_ccs_file (context, filename, ccs_install_dir)
     ccs_install_pathname = fullfile (context.ccs_install_root, ccs_install_dir, filename);
     ccs_backup_pathname = fullfile (context.ccs_backup_root, ccs_install_dir, filename);
-    repo_original_pathname = fullfile (context.repo_patch_root, 'common/original', filename);
-    repo_modified_pathname = fullfile (context.repo_patch_root, 'common/modified', filename);
+    system_type = computer ('arch');
+    if ~exist (fullfile (context.repo_patch_root, system_type, 'original', filename), 'file')
+        system_type = 'common';
+    end
+    repo_original_pathname = fullfile (context.repo_patch_root, system_type, 'original', filename);
+    repo_modified_pathname = fullfile (context.repo_patch_root, system_type, 'modified', filename);
 
     % Check required files exist
     if ~exist (repo_original_pathname, 'file')
